@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aston Union Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Employee Entry</h2>
+
+        <p class="subtitle">Enter employee details below</p>
+
+        <form id="form">
+
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="name" name="name" placeholder="Enter name" required>
+            </div>
+
+            <div class="input-group">
+                <label>Employee ID</label>
+                <input type="number" id="id" name="id" placeholder="Enter ID" required>
+            </div>
+
+            <div class="input-group">
+                <label>ID Proof</label>
+                <select id="idpr" name="idpr">
+                    <option value="1">Aadhar</option>
+                    <option value="2">Passport</option>
+                    <option value="3">Driving License</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Enter ID</label>
+                <input type="text" id="value" name="value" placeholder="Enter ID" required><br><br>
+            </div>
+
+            <button type="submit">Submit</button>
+
+            
+            <p id="status"></p>
+
+        </form>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

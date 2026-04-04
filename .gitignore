@@ -1,0 +1,21 @@
+# Node dependencies
+node_modules/
+
+# Compiled C binaries
+*.exe
+Uniondatabase
+Search
+Readuniondatabase
+
+# Database files
+Astonunion.bin
+*.dat
+*.bin
+
+# Secure Admin Environment
+admin/
+admin_server.js
+
+# Env variables
+.env
+.DS_Store
