@@ -1,18 +1,18 @@
 # Node dependencies
 node_modules/
 
-# Compiled C binaries
+# Data files (generated at runtime)
+employees.json
+Astonunion.bin
+*.dat
+
+# Compiled C binaries (legacy, not needed for deployment)
 *.exe
 Uniondatabase
 Search
 Readuniondatabase
 
-# Database files
-Astonunion.bin
-*.dat
-*.bin
-
-# Secure Admin Environment
+# Admin panel (local only, not deployed)
 admin/
 admin_server.js
 

@@ -45,9 +45,9 @@ form.addEventListener("submit", async (e) => {
 
         if (!res.ok) throw new Error("Server error");
 
-        const msg = await res.text();
+        const result = await res.json();
 
-        showMessage(msg);
+        showMessage(result.message || "Saved!");
         form.reset();
 
 

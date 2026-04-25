@@ -1,48 +1,124 @@
 const express = require("express");
-const { spawn } = require("child_process");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'flexboxunion')));
+app.use(express.static(path.join(__dirname, "flexboxunion")));
 
 const PORT = process.env.PORT || 3000;
-const extension = process.platform === 'win32' ? '.exe' : '';
+const DATA_FILE = path.join(__dirname, "employees.json");
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "";
 
-const writePath = path.join(__dirname, "Uniondatabase" + extension);
-const searchPath = path.join(__dirname, "Search" + extension);
-const readPath = path.join(__dirname, "Readuniondatabase" + extension);
+// ─── Middleware: authenticate admin requests ───
+function authenticateAdmin(req, res, next) {
+    if (!ADMIN_API_KEY) {
+        // No key configured — allow access (local dev)
+        return next();
+    }
 
+    // Accept key from header or query parameter
+    const key = req.headers["x-api-key"] || req.query.key;
 
+    if (!key || key !== ADMIN_API_KEY) {
+        return res.status(401).json({ error: "Unauthorized. Invalid or missing API key." });
+    }
+
+    next();
+}
+
+// ─── Helper: read all employees from JSON file ───
+function readEmployees() {
+    try {
+        if (!fs.existsSync(DATA_FILE)) return [];
+        const raw = fs.readFileSync(DATA_FILE, "utf-8");
+        return JSON.parse(raw);
+    } catch (err) {
+        console.error("Error reading data file:", err.message);
+        return [];
+    }
+}
+
+// ─── Helper: write employees array to JSON file ───
+function writeEmployees(employees) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(employees, null, 2), "utf-8");
+}
+
+// ─── Helper: resolve ID proof type to a label ───
+function idProofLabel(idpr) {
+    if (idpr === 1) return "Aadhar";
+    if (idpr === 2) return "Passport";
+    if (idpr === 3) return "Driving License";
+    return "Unknown";
+}
+
+// ━━━ POST /add — store a new employee (PUBLIC) ━━━
 app.post("/add", (req, res) => {
     const { name, id, idpr, value } = req.body;
 
-    const process = spawn(writePath);
+    if (!name || !id || !idpr || !value) {
+        return res.status(400).json({ error: "All fields are required." });
+    }
 
-    process.stdin.write(name + "\n");
-    process.stdin.write(id + "\n");
-    process.stdin.write(idpr + "\n");
-    process.stdin.write(value + "\n");
-    process.stdin.write("n\n");
-    process.stdin.end();
+    const employee = {
+        name: String(name).trim(),
+        id: Number(id),
+        idProofType: Number(idpr),
+        idProofLabel: idProofLabel(Number(idpr)),
+        idProofValue: String(value).trim(),
+        createdAt: new Date().toISOString(),
+    };
 
-    let output = "";
+    console.log("Adding employee:", employee);
 
-    process.stdout.on("data", (data) => {
-        output += data.toString();
-    });
+    const employees = readEmployees();
+    employees.push(employee);
+    writeEmployees(employees);
 
-    process.stderr.on("data", (data) => {
-        console.error("C Error:", data.toString());
-    });
-
-    process.on("close", () => {
-        res.send(output || "Employee saved successfully!");
-    });
-
-    setTimeout(() => process.kill(), 5000);
+    res.json({ message: "Employee saved successfully!", employee });
 });
 
-app.listen(PORT, "0.0.0.0", () => console.log(`Public server running on port ${PORT} (accessible on local network)`));
+// ━━━ GET /all — return all employees (PROTECTED) ━━━
+app.get("/all", authenticateAdmin, (req, res) => {
+    const employees = readEmployees();
+    res.json(employees);
+});
+
+// ━━━ GET /search?id=X — search by employee ID (PROTECTED) ━━━
+app.get("/search", authenticateAdmin, (req, res) => {
+    const searchId = Number(req.query.id);
+
+    if (isNaN(searchId)) {
+        return res.status(400).json({ error: "Invalid ID." });
+    }
+
+    const employees = readEmployees();
+    const found = employees.filter((e) => e.id === searchId);
+
+    if (found.length === 0) {
+        return res.json({ message: "Record not found.", results: [] });
+    }
+
+    res.json({ message: `Found ${found.length} record(s).`, results: found });
+});
+
+// ━━━ GET /download — download the raw JSON data file (PROTECTED) ━━━
+app.get("/download", authenticateAdmin, (req, res) => {
+    if (!fs.existsSync(DATA_FILE)) {
+        return res.status(404).json({ error: "No data file exists yet." });
+    }
+    res.download(DATA_FILE, "employees.json");
+});
+
+// ━━━ GET /health — health check for Render (PUBLIC) ━━━
+app.get("/health", (req, res) => {
+    res.json({ status: "ok", employees: readEmployees().length });
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Data file: ${DATA_FILE}`);
+    console.log(`API key protection: ${ADMIN_API_KEY ? "ENABLED" : "DISABLED (set ADMIN_API_KEY to enable)"}`);
+});

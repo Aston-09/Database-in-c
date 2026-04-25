@@ -1,12 +1,11 @@
 {
   "name": "uniondata",
   "version": "1.0.0",
-  "description": "",
+  "description": "Employee data entry system with web frontend",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "gcc Uniondatabase.c -o Uniondatabase && gcc Search.c -o Search && gcc Readuniondatabase.c -o Readuniondatabase"
+    "admin": "node admin_server.js"
   },
   "keywords": [],
   "author": "",
