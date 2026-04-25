@@ -11,9 +11,12 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "flexboxunion")));
 
 // Serve the admin panel — protected by API key
-// This must be defined BEFORE the authenticateAdmin middleware reads ADMIN_API_KEY,
-// so we inline the check here to avoid circular dependency at startup.
+// Only gate the HTML page; CSS/JS assets are harmless (contain no data)
 app.use("/admin", (req, res, next) => {
+    // Allow static assets through without a key
+    if (req.path.match(/\.(css|js|png|ico|svg|woff2?)$/)) {
+        return next();
+    }
     const apiKey = process.env.ADMIN_API_KEY || "";
     if (!apiKey) return next(); // no key set = local dev, allow
     const key = req.headers["x-api-key"] || req.query.key;
