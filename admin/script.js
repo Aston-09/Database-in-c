@@ -6,7 +6,7 @@
 const REMOTE_URL = localStorage.getItem("remoteUrl") || "";
 
 function getBaseUrl() {
-    return REMOTE_URL || "http://localhost:3000";
+    return REMOTE_URL || window.location.origin;
 }
 
 function getApiKey() {
