@@ -6,7 +6,22 @@ const fs = require("fs");
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve the main public frontend
 app.use(express.static(path.join(__dirname, "flexboxunion")));
+
+// Serve the admin panel — protected by API key
+// This must be defined BEFORE the authenticateAdmin middleware reads ADMIN_API_KEY,
+// so we inline the check here to avoid circular dependency at startup.
+app.use("/admin", (req, res, next) => {
+    const apiKey = process.env.ADMIN_API_KEY || "";
+    if (!apiKey) return next(); // no key set = local dev, allow
+    const key = req.headers["x-api-key"] || req.query.key;
+    if (!key || key !== apiKey) {
+        return res.status(401).send("Unauthorized. Provide a valid API key via ?key= in the URL.");
+    }
+    next();
+}, express.static(path.join(__dirname, "admin")));
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, "employees.json");
