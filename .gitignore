@@ -12,8 +12,7 @@ Uniondatabase
 Search
 Readuniondatabase
 
-# Admin panel (local only, not deployed)
-admin/
+# Admin panel local server (not needed on Render, main server.js handles it)
 admin_server.js
 
 # Env variables
